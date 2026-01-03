@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSVR Report Downloader with Manual Filename Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1000px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, #4a6fa5, #2c3e50);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header h1 i {
+            font-size: 32px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            background: #f1f8ff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: #e3f2fd;
+            color: #2c3e50;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #4a6fa5;
+            border-top: 3px solid #4a6fa5;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Date Selector Tab */
+        .date-selector-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .date-option {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .date-option h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a6fa5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Calendar Style */
+        .calendar-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-header span {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 8px 5px;
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .calendar-date {
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-date:hover {
+            background: #e8f4fc;
+        }
+
+        .calendar-date.selected {
+            background: #4a6fa5;
+            color: white;
+        }
+
+        /* Quick Select */
+        .quick-select {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .date-btn {
+            padding: 15px;
+            background: #f1f8ff;
+            border: 2px solid #d1e3ff;
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-btn:hover {
+            background: #e3f2fd;
+            border-color: #4a6fa5;
+            transform: translateY(-2px);
+        }
+
+        .date-btn i {
+            font-size: 20px;
+            color: #4a6fa5;
+            width: 24px;
+        }
+
+        /* DIRECT FILENAME EDITOR TAB */
+        .filename-editor-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .info-card {
+            background: #f0f7ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4a6fa5;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffecb5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .warning-box i {
+            color: #ffc107;
+            font-size: 24px;
+        }
+
+        .warning-box strong {
+            color: #856404;
+        }
+
+        .editor-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            border: 2px solid #e8f4fc;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group label i {
+            color: #4a6fa5;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            border-color: #4a6fa5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+        }
+
+        .input-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .input-group .hint {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group .hint i {
+            color: #4a6fa5;
+        }
+
+        /* Suggested Filename Section */
+        .suggestions {
+            margin-top: 20px;
+        }
+
+        .suggestions h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .suggestion-btn {
+            padding: 10px 20px;
+            background: #e3f2fd;
+            border: 2px solid #b8d4f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            transition: all 0.2s;
+        }
+
+        .suggestion-btn:hover {
+            background: #4a6fa5;
+            color: white;
+            border-color: #4a6fa5;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .preview-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .preview-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .preview-item .label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preview-item pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .base64-box {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        /* Download Section */
+        .download-section {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+        }
+
+        .selected-info-display {
+            background: #e8f4fc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #b8d4f0;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-row i {
+            font-size: 20px;
+            color: #4a6fa5;
+            width: 24px;
+        }
+
+        .info-row .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 120px;
+        }
+
+        .info-row .info-value {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        .download-btn {
+            background: linear-gradient(to right, #4a6fa5, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 5px 15px rgba(74, 111, 165, 0.4);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(74, 111, 165, 0.6);
+        }
+
+        .download-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        /* Tab Switch */
+        .tab-switch {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .tab-switch a {
+            color: #4a6fa5;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab-switch a:hover {
+            color: #2c3e50;
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+
+        /* Utility Classes */
+        .code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        @media (max-width: 768px) {
+            .tab-content {
+                padding: 20px;
+            }
+            
+            .date-selector-container {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                padding: 15px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .info-row .info-label {
+                min-width: auto;
+            }
+            
+            .suggestion-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-file-download"></i> DSVR Report Downloader</h1>
+            <p>Download Daily Significant Variations Reports with manual filename editing</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="date-tab">
+                <i class="far fa-calendar-alt"></i> Date Selector
+            </button>
+            <button class="tab-btn" data-tab="filename-tab">
+                <i class="fas fa-edit"></i> Direct Filename Editor
+            </button>
+        </div>
+
+        <!-- Tab 1: Date Selector (Simplified) -->
+        <div class="tab-content active" id="date-tab">
+            <div class="date-selector-container">
+                <!-- Calendar Selector -->
+                <div class="date-option">
+                    <h3><i class="far fa-calendar-alt"></i> Select Date</h3>
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                            <span id="currentMonthYear">May 2025</span>
+                            <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid" id="calendarDays">
+                            <!-- Calendar will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Date Selector -->
+                <div class="date-option">
+                    <h3><i class="fas fa-bolt"></i> Quick Select</h3>
+                    <div class="quick-select">
+                        <button class="date-btn" data-days="0">
+                            <i class="far fa-calendar-check"></i>
+                            <div>Today</div>
+                        </button>
+                        <button class="date-btn" data-days="-1">
+                            <i class="fas fa-calendar-day"></i>
+                            <div>Yesterday</div>
+                        </button>
+                        <button class="date-btn" data-days="-7">
+                            <i class="fas fa-calendar-week"></i>
+                            <div>Last Week</div>
+                        </button>
+                        <button class="date-btn" data-days="-30">
+                            <i class="far fa-calendar"></i>
+                            <div>Last Month</div>
+                        </button>
+                    </div>
+
+                    <!-- Custom Date -->
+                    <div style="margin-top: 20px;">
+                        <h4><i class="fas fa-calendar-plus"></i> Custom Date</h4>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <select id="yearSelect" style="flex: 1; padding: 10px;">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
+                            <select id="monthSelect" style="flex: 1; padding: 10px;">
+                                <option value="01">Jan</option>
+                                <option value="02">Feb</option>
+                                <option value="03">Mar</option>
+                                <option value="04">Apr</option>
+                                <option value="05">May</option>
+                                <option value="06">Jun</option>
+                                <option value="07">Jul</option>
+                                <option value="08">Aug</option>
+                                <option value="09">Sep</option>
+                                <option value="10">Oct</option>
+                                <option value="11">Nov</option>
+                                <option value="12">Dec</option>
+                            </select>
+                            <input type="number" id="daySelect" min="1" max="31" placeholder="Day" value="28" style="flex: 1; padding: 10px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Selection -->
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Current Selection</h3>
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <i class="far fa-calendar" style="color: #4a6fa5;"></i>
+                        <div><strong>Selected Date:</strong> <span id="selectedDateDisplay">May 28, 2025</span></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-file-pdf" style="color: #4a6fa5;"></i>
+                        <div><strong>Generated Filename:</strong> <span id="fileNameDisplay">DSVR_20250528.pdf</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switch -->
+            <div class="tab-switch">
+                <a href="#" data-switch-to="filename-tab">
+                    <i class="fas fa-exchange-alt"></i> Switch to Direct Filename Editor (for manual fixes)
+                </a>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <button id="downloadBtnDateTab" class="download-btn">
+                    <i class="fas fa-download"></i>
+                    <span>Download DSVR Report</span>
+                    <i class="fas fa-spinner fa-spin loading" id="loadingSpinnerDate"></i>
+                </button>
+
+                <div id="statusMessageDate" class="status-message"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: DIRECT FILENAME EDITOR -->
+        <div class="tab-content" id="filename-tab">
+            <div class="filename-editor-container">
+                <!-- Info Card -->
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> Direct Filename Editor</h3>
+                    <p>Use this tab when the automatic filename generation doesn't work. Manually enter the exact filename that exists on the server.</p>
+                    
+                    <div class="warning-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Important:</strong> If downloads fail with the Date Selector tab, 
+                            it's likely because the filename pattern has changed. Use this tab to manually 
+                            enter the correct filename.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Section -->
+                <div class="editor-section">
+                    <!-- Base Path -->
+                    <div class="input-group">
+                        <label for="basePathInput">
+                            <i class="fas fa-folder"></i> Base Directory Path
+                        </label>
+                        <input type="text" id="basePathInput" 
+                               value="/var/www/html/wp-content/uploads/downloads/reports/daily-significant-variations-report/">
+                        <div class="hint">
+                            <i class="fas fa-info-circle"></i>
+                            The directory where reports are stored on the server
+                        </div>
+                    </div>
+
+                    <!-- Direct Filename Input -->
+                    <div class="input-group">
+                        <label for="directFilenameInput">
+                            <i class="fas fa-file-pdf"></i> Exact Filename (CRITICAL)
+                        </label>
+                        <input type="text" id="directFilenameInput" 
+                               placeholder="Enter the exact filename (e.g., DSVR_20250526.pdf or DSVR_2025-05-26.pdf)">
+                        <div class="hint">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Enter the EXACT filename that exists on the server. This overrides all automatic generation.
+                        </div>
+                    </div>
+
+                    <!-- Common Filename Patterns -->
+                    <div class="suggestions">
+                        <h4><i class="fas fa-lightbulb"></i> Common Filename Patterns (Click to use)</h4>
+                        <div class="suggestion-buttons" id="filenameSuggestions">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div class="preview-section">
+                        <h4><i class="fas fa-eye"></i> Preview</h4>
+                        <div class="preview-box">
+                            <div class="preview-item">
+                                <div class="label">
+                                    <i class="fas fa-file-alt"></i> Complete File Path:
+                                </div>
+                                <pre id="fullPathPreview">/var/www/html/wp-content/uploads/downloads/reports/daily-significant-variations-report/DSVR_20250528.pdf</pre>
+                            </div>
+                            
+                            <div class="preview-item">
+                                <div class="label">
+                                    <i class="fas fa-code"></i> Base64 Encoded Hash (what gets sent to server):
+                                </div>
+                                <div class="base64-box" id="base64Preview">
+                                    L3Zhci93d3cvaHRtbC93cC1jb250ZW50L3VwbG9hZHMvZG93bmxvYWRzL3JlcG9ydHMvZGFpbHktc2lnbmlmaWNhbnQtdmFyaWF0aW9ucy1yZXBvcnQvRFNWUl8yMDI1MDUyOC5wZGY=
+                                </div>
+                                <button class="copy-btn" onclick="copyToClipboard('base64Preview')">
+                                    <i class="far fa-copy"></i> Copy Base64 Hash
+                                </button>
+                            </div>
+                            
+                            <div class="preview-item">
+                                <div class="label">
+                                    <i class="fas fa-link"></i> Complete Download URL:
+                                </div>
+                                <pre id="fullUrlPreview">https://www.iemop.ph/market-reports/daily-significant-variations-report/?md_file=L3Zhci93d3cvaHRtbC93cC1jb250ZW50L3VwbG9hZHMvZG93bmxvYWRzL3JlcG9ydHMvZGFpbHktc2lnbmlmaWNhbnQtdmFyaWF0aW9ucy1yZXBvcnQvRFNWUl8yMDI1MDUyOC5wZGY=</pre>
+                                <button class="copy-btn" onclick="copyToClipboard('fullUrlPreview')">
+                                    <i class="far fa-copy"></i> Copy Full URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Switch -->
+                <div class="tab-switch">
+                    <a href="#" data-switch-to="date-tab">
+                        <i class="fas fa-exchange-alt"></i> Switch back to Date Selector
+                    </a>
+                </div>
+
+                <!-- Download Section -->
+                <div class="download-section">
+                    <div class="selected-info-display">
+                        <div class="info-row">
+                            <i class="fas fa-folder"></i>
+                            <div class="info-label">Base Path:</div>
+                            <div class="info-value" id="infoBasePath">/var/www/html/wp-content/uploads/downloads/reports/daily-significant-variations-report/</div>
+                        </div>
+                        <div class="info-row">
+                            <i class="fas fa-file"></i>
+                            <div class="info-label">Manual Filename:</div>
+                            <div class="info-value" id="infoFilename">DSVR_20250528.pdf</div>
+                        </div>
+                        <div class="info-row">
+                            <i class="fas fa-code"></i>
+                            <div class="info-label">Base64 Hash:</div>
+                            <div class="info-value" id="infoHash">L3Zhci93d3cvaHRtbC93cC1jb250ZW50L3VwbG9hZHMvZG93bmxvYWRzL3JlcG9ydHMvZGFpbHktc2lnbmlmaWNhbnQtdmFyaWF0aW9ucy1yZXBvcnQvRFNWUl8yMDI1MDUyOC5wZGY=</div>
+                        </div>
+                    </div>
+
+                    <button id="downloadBtnFilenameTab" class="download-btn">
+                        <i class="fas fa-download"></i>
+                        <span>Download with Manual Filename</span>
+                        <i class="fas fa-spinner fa-spin loading" id="loadingSpinnerFilename"></i>
+                    </button>
+
+                    <div id="statusMessageFilename" class="status-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-info-circle"></i> DSVR Report Downloader - Direct Filename Editor for when automatic patterns fail</p>
+            <p>Manually enter exact filenames to fix download issues</p>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let selectedDate = new Date();
+        let currentMonth = selectedDate.getMonth();
+        let currentYear = selectedDate.getFullYear();
+        
+        // Manual filename editor state
+        let basePath = "/var/www/html/wp-content/uploads/downloads/reports/daily-signential-variations-report/";
+        let manualFilename = "";
+
+        // DOM Elements
+        const calendarDays = document.getElementById('calendarDays');
+        const currentMonthYear = document.getElementById('currentMonthYear');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const dateBtns = document.querySelectorAll('.date-btn');
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        const daySelect = document.getElementById('daySelect');
+        
+        // Display elements
+        const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        
+        // Filename editor elements
+        const basePathInput = document.getElementById('basePathInput');
+        const directFilenameInput = document.getElementById('directFilenameInput');
+        const filenameSuggestions = document.getElementById('filenameSuggestions');
+        const fullPathPreview = document.getElementById('fullPathPreview');
+        const base64Preview = document.getElementById('base64Preview');
+        const fullUrlPreview = document.getElementById('fullUrlPreview');
+        const infoBasePath = document.getElementById('infoBasePath');
+        const infoFilename = document.getElementById('infoFilename');
+        const infoHash = document.getElementById('infoHash');
+        
+        // Tab elements
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const tabSwitchLinks = document.querySelectorAll('[data-switch-to]');
+        
+        // Download buttons
+        const downloadBtnDateTab = document.getElementById('downloadBtnDateTab');
+        const downloadBtnFilenameTab = document.getElementById('downloadBtnFilenameTab');
+        const loadingSpinnerDate = document.getElementById('loadingSpinnerDate');
+        const loadingSpinnerFilename = document.getElementById('loadingSpinnerFilename');
+        const statusMessageDate = document.getElementById('statusMessageDate');
+        const statusMessageFilename = document.getElementById('statusMessageFilename');
+
+        // Initialize the application
+        function init() {
+            // Set today's date
+            updateQuickDates();
+            
+            // Initialize calendar
+            renderCalendar();
+            
+            // Initialize year dropdown
+            populateYearSelect();
+            
+            // Set current date in dropdowns
+            monthSelect.value = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+            daySelect.value = selectedDate.getDate().toString().padStart(2, '0');
+            
+            // Initialize filename editor
+            initializeFilenameEditor();
+            
+            // Update all displays
+            updateAllDisplays();
+            
+            // Add event listeners
+            prevMonthBtn.addEventListener('click', goToPrevMonth);
+            nextMonthBtn.addEventListener('click', goToNextMonth);
+            
+            dateBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const days = parseInt(this.getAttribute('data-days'));
+                    selectRelativeDate(days);
+                });
+            });
+            
+            yearSelect.addEventListener('change', updateDateFromDropdowns);
+            monthSelect.addEventListener('change', updateDateFromDropdowns);
+            daySelect.addEventListener('input', updateDateFromDropdowns);
+            
+            // Filename editor listeners
+            basePathInput.addEventListener('input', updateFromFilenameEditor);
+            directFilenameInput.addEventListener('input', updateFromFilenameEditor);
+            
+            // Tab switching
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            tabSwitchLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-switch-to');
+                    switchTab(tabId);
+                    
+                    // When switching to filename tab, pre-fill with current date
+                    if (tabId === 'filename-tab') {
+                        const dateStr = formatDateForFilename(selectedDate);
+                        directFilenameInput.value = `DSVR_${dateStr}.pdf`;
+                        updateFromFilenameEditor();
+                    }
+                });
+            });
+            
+            // Download buttons
+            downloadBtnDateTab.addEventListener('click', () => downloadReport('date'));
+            downloadBtnFilenameTab.addEventListener('click', () => downloadReport('filename'));
+            
+            // Initial tab
+            switchTab('date-tab');
+        }
+
+        // Initialize filename editor
+        function initializeFilenameEditor() {
+            // Generate filename suggestions
+            const suggestions = generateFilenameSuggestions();
+            filenameSuggestions.innerHTML = '';
+            
+            suggestions.forEach(suggestion => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'suggestion-btn';
+                button.textContent = suggestion;
+                button.addEventListener('click', () => {
+                    directFilenameInput.value = suggestion;
+                    updateFromFilenameEditor();
+                });
+                filenameSuggestions.appendChild(button);
+            });
+            
+            // Set initial manual filename based on current date
+            const dateStr = formatDateForFilename(selectedDate);
+            directFilenameInput.value = `DSVR_${dateStr}.pdf`;
+        }
+
+        // Generate filename suggestions
+        function generateFilenameSuggestions() {
+            const date = selectedDate;
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            
+            return [
+                `DSVR_${year}${month}${day}.pdf`,
+                `DSVR_${year}-${month}-${day}.pdf`,
+                `DSVR_${day}-${month}-${year}.pdf`,
+                `DSVR_${year}_${month}_${day}.pdf`,
+                `DSVR_${month}-${day}-${year}.pdf`,
+                `dsvr_${year}${month}${day}.pdf`,
+                `DSVR_Report_${year}${month}${day}.pdf`,
+                `Daily_Significant_Variations_${year}${month}${day}.pdf`,
+                `DSVR_${year}${month}${day}_FINAL.pdf`,
+                `DSVR_${year}${month}${day}_REPORT.pdf`
+            ];
+        }
+
+        // Update quick dates
+        function updateQuickDates() {
+            // Update suggestion buttons if on filename tab
+            if (document.getElementById('filename-tab').classList.contains('active')) {
+                const suggestions = generateFilenameSuggestions();
+                const buttons = filenameSuggestions.querySelectorAll('.suggestion-btn');
+                buttons.forEach((button, index) => {
+                    if (suggestions[index]) {
+                        button.textContent = suggestions[index];
+                    }
+                });
+            }
+        }
+
+        // Format date as "Month DD, YYYY"
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+        }
+
+        // Format date as "YYYYMMDD" for filename
+        function formatDateForFilename(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        // Populate year dropdown
+        function populateYearSelect() {
+            const currentYear = new Date().getFullYear();
+            yearSelect.innerHTML = '';
+            
+            for (let year = currentYear; year >= 2023; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+            
+            yearSelect.value = currentYear;
+        }
+
+        // Render calendar for current month/year
+        function renderCalendar() {
+            calendarDays.innerHTML = '';
+            
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            currentMonthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                calendarDays.appendChild(dayElement);
+            });
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-date other-month';
+                calendarDays.appendChild(emptyCell);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateCell = document.createElement('div');
+                dateCell.className = 'calendar-date';
+                dateCell.textContent = day;
+                
+                const cellDate = new Date(currentYear, currentMonth, day);
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dateCell.classList.add('today');
+                }
+                
+                if (cellDate.toDateString() === selectedDate.toDateString()) {
+                    dateCell.classList.add('selected');
+                }
+                
+                dateCell.addEventListener('click', () => {
+                    selectDate(new Date(currentYear, currentMonth, day));
+                });
+                
+                calendarDays.appendChild(dateCell);
+            }
+        }
+
+        // Navigate to previous month
+        function goToPrevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        // Navigate to next month
+        function goToNextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // Select a specific date
+        function selectDate(date) {
+            selectedDate = date;
+            updateAllDisplays();
+            
+            yearSelect.value = date.getFullYear();
+            monthSelect.value = (date.getMonth() + 1).toString().padStart(2, '0');
+            daySelect.value = date.getDate().toString().padStart(2, '0');
+            
+            if (date.getMonth() !== currentMonth || date.getFullYear() !== currentYear) {
+                currentMonth = date.getMonth();
+                currentYear = date.getFullYear();
+                renderCalendar();
+            } else {
+                renderCalendar();
+            }
+        }
+
+        // Select relative date (today, yesterday, etc.)
+        function selectRelativeDate(daysOffset) {
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + daysOffset);
+            selectDate(newDate);
+        }
+
+        // Update date from dropdowns
+        function updateDateFromDropdowns() {
+            const year = parseInt(yearSelect.value);
+            const month = parseInt(monthSelect.value) - 1;
+            const day = parseInt(daySelect.value);
+            
+            if (day < 1) daySelect.value = 1;
+            if (day > 31) daySelect.value = 31;
+            
+            const newDate = new Date(year, month, parseInt(daySelect.value));
+            
+            if (newDate.getFullYear() === year && 
+                newDate.getMonth() === month && 
+                newDate.getDate() === parseInt(daySelect.value)) {
+                selectDate(newDate);
+            }
+        }
+
+        // Update from filename editor
+        function updateFromFilenameEditor() {
+            basePath = basePathInput.value.trim();
+            manualFilename = directFilenameInput.value.trim();
+            
+            // Ensure basePath ends with slash
+            if (basePath && !basePath.endsWith('/')) {
+                basePath += '/';
+                basePathInput.value = basePath;
+            }
+            
+            // If no manual filename, use default
+            if (!manualFilename) {
+                const dateStr = formatDateForFilename(selectedDate);
+                manualFilename = `DSVR_${dateStr}.pdf`;
+                directFilenameInput.value = manualFilename;
+            }
+            
+            updateFilenameEditorPreview();
+        }
+
+        // Update filename editor preview
+        function updateFilenameEditorPreview() {
+            const fullPath = basePath + manualFilename;
+            const base64Hash = btoa(fullPath);
+            const baseUrl = "https://www.iemop.ph/market-reports/daily-significant-variations-report/?md_file=";
+            const fullUrl = baseUrl + base64Hash;
+            
+            // Update previews
+            fullPathPreview.textContent = fullPath;
+            base64Preview.textContent = base64Hash;
+            fullUrlPreview.textContent = fullUrl;
+            
+            // Update info display
+            infoBasePath.textContent = basePath;
+            infoFilename.textContent = manualFilename;
+            infoHash.textContent = base64Hash;
+        }
+
+        // Update all displays
+        function updateAllDisplays() {
+            // Update date selector displays
+            selectedDateDisplay.textContent = formatDate(selectedDate);
+            
+            // Generate default filename for date tab
+            const dateStr = formatDateForFilename(selectedDate);
+            fileNameDisplay.textContent = `DSVR_${dateStr}.pdf`;
+            
+            // Update filename editor if on that tab
+            if (document.getElementById('filename-tab').classList.contains('active')) {
+                // Update suggestion buttons
+                updateQuickDates();
+                
+                // If manual filename is empty or matches pattern, update it
+                if (!manualFilename || manualFilename === `DSVR_${formatDateForFilename(selectedDate)}.pdf`) {
+                    manualFilename = `DSVR_${dateStr}.pdf`;
+                    directFilenameInput.value = manualFilename;
+                    updateFilenameEditorPreview();
+                }
+            }
+        }
+
+        // Switch between tabs
+        function switchTab(tabId) {
+            // Update tab buttons
+            tabBtns.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Update tab contents
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Update displays for the active tab
+            updateAllDisplays();
+        }
+
+        // Download report function
+        async function downloadReport(tab) {
+            const isDateTab = tab === 'date';
+            const downloadBtn = isDateTab ? downloadBtnDateTab : downloadBtnFilenameTab;
+            const loadingSpinner = isDateTab ? loadingSpinnerDate : loadingSpinnerFilename;
+            const statusMessage = isDateTab ? statusMessageDate : statusMessageFilename;
+            
+            // Get the appropriate file path
+            let filePath;
+            
+            if (isDateTab) {
+                // Use date selector path
+                const dateStr = formatDateForFilename(selectedDate);
+                filePath = `/var/www/html/wp-content/uploads/downloads/reports/daily-significant-variations-report/DSVR_${dateStr}.pdf`;
+            } else {
+                // Use manual filename from editor
+                filePath = basePath + manualFilename;
+            }
+            
+            // Validate path
+            if (!filePath || filePath.trim() === '') {
+                showStatus('Please enter a valid file path.', 'error', statusMessage);
+                return;
+            }
+            
+            // Show loading state
+            downloadBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            statusMessage.className = 'status-message';
+            statusMessage.style.display = 'none';
+            
+            try {
+                // Create base64 hash
+                const fileHash = btoa(filePath);
+                
+                // Construct the download URL
+                const baseUrl = "https://www.iemop.ph/market-reports/daily-significant-variations-report/?md_file=";
+                const downloadUrl = baseUrl + fileHash;
+                
+                console.log('Download URL:', downloadUrl);
+                console.log('File path:', filePath);
+                console.log('Base64 hash:', fileHash);
+                
+                // Open in new tab
+                const newWindow = window.open(downloadUrl, '_blank');
+                
+                if (!newWindow) {
+                    throw new Error('Popup blocked. Please allow popups for this site.');
+                }
+                
+                showStatus(`Download started! If it doesn't work, try a different filename in the Filename Editor tab.`, 'success', statusMessage);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showStatus(`Error: ${error.message}. Try using the Filename Editor tab.`, 'error', statusMessage);
+            } finally {
+                setTimeout(() => {
+                    downloadBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type, element) {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            let textToCopy;
+            
+            if (elementId === 'base64Preview') {
+                textToCopy = element.textContent;
+            } else if (elementId === 'fullUrlPreview') {
+                textToCopy = element.textContent;
+            }
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Show temporary success message
+                const originalText = event.target.innerHTML;
+                event.target.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                event.target.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    event.target.innerHTML = originalText;
+                    event.target.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
